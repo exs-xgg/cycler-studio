@@ -16,29 +16,24 @@ interface ControlsProps {
 }
 
 export const Controls: React.FC<ControlsProps> = ({
-  position,
-  setPosition,
-  bikeType,
-  setBikeType,
-  recordingState,
-  onStart,
-  onStop,
-  onReset,
-  isModelLoaded
+  position, setPosition, bikeType, setBikeType,
+  recordingState, onStart, onStop, onReset, isModelLoaded
 }) => {
+  const canChange = recordingState === 'inactive' || recordingState === 'done';
+
   return (
     <div className="controls-panel glass-panel">
       <h2>Fit Settings</h2>
-      
+
       <div className="control-group">
         <label>Bike Type</label>
         <div className="button-group">
           {(['Road', 'Hybrid', 'Mountain'] as BikeType[]).map(type => (
-            <button 
-              key={type} 
+            <button
+              key={type}
               className={`select-btn ${bikeType === type ? 'active' : ''}`}
               onClick={() => setBikeType(type)}
-              disabled={recordingState !== 'idle' && recordingState !== 'done'}
+              disabled={!canChange}
             >
               {type}
             </button>
@@ -50,11 +45,11 @@ export const Controls: React.FC<ControlsProps> = ({
         <label>Riding Position</label>
         <div className="button-group">
           {(['Race/Aero', 'Endurance', 'Casual'] as BikePosition[]).map(pos => (
-            <button 
-              key={pos} 
+            <button
+              key={pos}
               className={`select-btn ${position === pos ? 'active' : ''}`}
               onClick={() => setPosition(pos)}
-              disabled={recordingState !== 'idle' && recordingState !== 'done'}
+              disabled={!canChange}
             >
               {pos.split('/')[0]}
             </button>
@@ -63,16 +58,18 @@ export const Controls: React.FC<ControlsProps> = ({
       </div>
 
       <div className="action-buttons">
-        {(recordingState === 'idle' || recordingState === 'done') ? (
-          <button 
-            className="action-btn start-btn" 
+        {canChange ? (
+          <button
+            className="action-btn start-btn"
             onClick={recordingState === 'done' ? onReset : onStart}
             disabled={!isModelLoaded}
           >
-            {recordingState === 'done' ? <><RotateCcw size={18} /> New Session</> : <><Play size={18} /> Start Tracking</>}
+            {recordingState === 'done'
+              ? <><RotateCcw size={18} /> New Session</>
+              : <><Play size={18} /> Start Tracking</>}
           </button>
         ) : (
-          <button className="action-btn stop-btn" onClick={onStop}>
+          <button className="action-btn stop-btn" onClick={() => { onStop(); onReset(); }}>
             <Square size={18} /> Stop
           </button>
         )}

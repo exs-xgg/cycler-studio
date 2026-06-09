@@ -9,19 +9,14 @@ import './App.css';
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  
+
   const [position, setPosition] = useState<BikePosition>('Race/Aero');
   const [bikeType, setBikeType] = useState<BikeType>('Road');
 
   const {
-    isModelLoaded,
-    recordingState,
-    currentMetrics,
-    recordedData,
-    startTracking,
-    stopTracking,
-    reset,
-    canvasRef
+    isModelLoaded, recordingState, currentMetrics, recordedData,
+    error, warning, totalFrames, detectedFrames, elapsedSeconds,
+    startTracking, stopTracking, reset, canvasRef
   } = usePoseDetection(videoRef);
 
   return (
@@ -33,14 +28,19 @@ function App() {
 
       <main className="main-content">
         <div className="left-column">
-          <CameraView 
+          <CameraView
             videoRef={videoRef}
             canvasRef={canvasRef}
             isModelLoaded={isModelLoaded}
             recordingState={recordingState}
+            error={error}
+            warning={warning}
+            elapsedSeconds={elapsedSeconds}
+            totalFrames={totalFrames}
+            detectedFrames={detectedFrames}
           />
-          
-          <Controls 
+
+          <Controls
             position={position}
             setPosition={setPosition}
             bikeType={bikeType}
@@ -54,16 +54,18 @@ function App() {
         </div>
 
         <div className="right-column">
-          <Dashboard 
+          <Dashboard
             metrics={currentMetrics}
             history={recordedData}
           />
-          
+
           {recordingState === 'done' && (
-            <Results 
+            <Results
               recordedData={recordedData}
               position={position}
               bikeType={bikeType}
+              totalFrames={totalFrames}
+              detectedFrames={detectedFrames}
             />
           )}
         </div>

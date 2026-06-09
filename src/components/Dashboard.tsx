@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import type { BikeFitMetrics } from '../utils/angles';
 
 interface DashboardProps {
@@ -7,58 +7,86 @@ interface DashboardProps {
   history: BikeFitMetrics[];
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ metrics, history }) => {
-  // Format data for Recharts
-  const chartData = history.map((m, index) => ({
-    time: index, // In a real app we'd use actual timestamps
-    Elbow: Math.round(m.elbowAngle),
-    Hip: Math.round(m.hipAngle),
-    Knee: Math.round(m.kneeAngle),
-    Ankle: Math.round(m.anklingRange)
-  })).slice(-100); // Keep last 100 points for performance
+const JOINT_CONFIG = [
+  { key: 'elbowAngle', label: 'Elbow Angle', color: '#00f0ff', idealMin: 150, idealMax: 160 },
+  { key: 'hipAngle', label: 'Hip Angle', color: '#ff003c', idealMin: 60, idealMax: 110 },
+  { key: 'kneeAngle', label: 'Knee Angle', color: '#39ff14', idealMin: 65, idealMax: 145 },
+] as const;
 
+export const Dashboard: React.FC<DashboardProps> = ({ metrics, history }) => {
   return (
     <div className="dashboard-panel glass-panel">
       <h2>Live Telemetry</h2>
-      
+
       <div className="metrics-grid">
-        <MetricCard title="Elbow Angle" value={metrics?.elbowAngle} unit="°" />
-        <MetricCard title="Hip Angle" value={metrics?.hipAngle} unit="°" />
-        <MetricCard title="Knee Angle" value={metrics?.kneeAngle} unit="°" />
-        <MetricCard title="Ankling Range" value={metrics?.anklingRange} unit="°" />
+        <MetricCard title="Elbow" value={metrics?.elbowAngle} unit="°" color="#00f0ff" />
+        <MetricCard title="Hip" value={metrics?.hipAngle} unit="°" color="#ff003c" />
+        <MetricCard title="Knee" value={metrics?.kneeAngle} unit="°" color="#39ff14" />
+        <MetricCard title="Ankle" value={metrics?.anklingRange} unit="°" na />
       </div>
 
-      <div className="chart-container">
+      <div className="charts-grid">
         {history.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="time" hide />
-              <YAxis domain={['auto', 'auto']} stroke="#a1a1aa" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(15, 17, 21, 0.9)', border: '1px solid rgba(255,255,255,0.1)' }}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="Elbow" stroke="#00f0ff" dot={false} strokeWidth={2} isAnimationActive={false} />
-              <Line type="monotone" dataKey="Hip" stroke="#ff003c" dot={false} strokeWidth={2} isAnimationActive={false} />
-              <Line type="monotone" dataKey="Knee" stroke="#39ff14" dot={false} strokeWidth={2} isAnimationActive={false} />
-              <Line type="monotone" dataKey="Ankle" stroke="#ffb800" dot={false} strokeWidth={2} isAnimationActive={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          JOINT_CONFIG.map(joint => {
+            const data = history.slice(-200).map((m, i) => ({
+              t: i,
+              value: Math.round(m[joint.key] as number),
+            }));
+            return (
+              <div key={joint.key} className="chart-card">
+                <div className="chart-card-header">
+                  <span className="chart-dot" style={{ background: joint.color }}></span>
+                  <span className="chart-label">{joint.label}</span>
+                  <span className="chart-range">{joint.idealMin}°–{joint.idealMax}°</span>
+                </div>
+                <div className="chart-body">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                      <XAxis dataKey="t" hide />
+                      <YAxis
+                        domain={[
+                          (min: number) => Math.min(min, joint.idealMin) - 10,
+                          (max: number) => Math.max(max, joint.idealMax) + 10,
+                        ]}
+                        stroke="#555"
+                        fontSize={10}
+                        tickCount={4}
+                      />
+                      <Tooltip
+                        contentStyle={{ background: 'rgba(15,17,21,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '12px' }}
+                        labelStyle={{ display: 'none' }}
+                        formatter={(v: any) => [`${v}°`, joint.label]}
+                      />
+                      <ReferenceLine y={joint.idealMin} stroke={joint.color} strokeDasharray="4 4" strokeOpacity={0.4} />
+                      <ReferenceLine y={joint.idealMax} stroke={joint.color} strokeDasharray="4 4" strokeOpacity={0.4} />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke={joint.color}
+                        dot={false}
+                        strokeWidth={2}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            );
+          })
         ) : (
-          <div className="empty-chart">Waiting for data...</div>
+          <div className="empty-chart" style={{ gridColumn: '1 / -1' }}>Waiting for data...</div>
         )}
       </div>
     </div>
   );
 };
 
-const MetricCard = ({ title, value, unit }: { title: string, value?: number, unit: string }) => (
+const MetricCard = ({ title, value, unit, color, na }: { title: string; value?: number | null; unit: string; color?: string; na?: boolean }) => (
   <div className="metric-card">
     <div className="metric-title">{title}</div>
-    <div className="metric-value">
-      {value !== undefined ? Math.round(value) : '--'}<span className="metric-unit">{unit}</span>
+    <div className="metric-value" style={color && value != null ? { color } : undefined}>
+      {value != null ? Math.round(value) : na ? 'N/A' : '--'}<span className="metric-unit">{value != null ? unit : ''}</span>
     </div>
   </div>
 );

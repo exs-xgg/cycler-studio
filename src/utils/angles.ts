@@ -5,20 +5,17 @@ export type Point = {
 
 /**
  * Calculates the angle between three points (a, b, c) where b is the vertex.
- * The logic corresponds to the paper: math.atan2(c[1]-b[1], c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0])
+ * From the paper: math.atan2(c[1]-b[1], c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0])
  */
 export const calculateAngle = (a: Point, b: Point, c: Point): number => {
   const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
   let angle = Math.abs((radians * 180.0) / Math.PI);
-
-  if (angle > 180.0) {
-    angle = 360.0 - angle;
-  }
+  if (angle > 180.0) angle = 360.0 - angle;
   return angle;
 };
 
 /**
- * Applies an average filter to smooth gradual changes and reduce dataset fluctuations caused by noise
+ * Applies an average filter to smooth gradual changes and reduce noise
  */
 export const applyAverageFilter = (data: number, prevData: number, filterFactor: number = 0.5): number => {
   return data * filterFactor + prevData * (1 - filterFactor);
@@ -28,7 +25,8 @@ export interface BikeFitMetrics {
   elbowAngle: number;
   hipAngle: number;
   kneeAngle: number;
-  anklingRange: number;
+  /** null when using MoveNet (no foot keypoints available) */
+  anklingRange: number | null;
 }
 
 export type BikePosition = 'Race/Aero' | 'Endurance' | 'Casual';
@@ -40,15 +38,12 @@ export const getFitLabel = (
   _bikeType: BikeType = 'Road'
 ): 'Fit' | 'Not Fit' => {
   const { elbowAngle, hipAngle, kneeAngle, anklingRange } = metrics;
-  
-  // These are the ideal ranges for a Road bike based on the paper.
-  // We can adjust based on the position/bikeType later if needed.
-  let targetHip = { min: 60, max: 110 };
-  let targetElbow = { min: 150, max: 160 };
-  let targetKnee = { min: 65, max: 145 };
-  let targetAnkling = { min: 115, max: 180 };
 
-  // Example adjustments based on position (if we had data, we'd refine this)
+  let targetHip = { min: 60, max: 110 };
+  const targetElbow = { min: 150, max: 160 };
+  const targetKnee = { min: 65, max: 145 };
+  const targetAnkling = { min: 115, max: 180 };
+
   if (position === 'Endurance') {
     targetHip = { min: 70, max: 115 };
   } else if (position === 'Casual') {
@@ -58,11 +53,10 @@ export const getFitLabel = (
   const isHipFit = hipAngle >= targetHip.min && hipAngle <= targetHip.max;
   const isElbowFit = elbowAngle >= targetElbow.min && elbowAngle <= targetElbow.max;
   const isKneeFit = kneeAngle >= targetKnee.min && kneeAngle <= targetKnee.max;
-  const isAnklingFit = anklingRange >= targetAnkling.min && anklingRange <= targetAnkling.max;
+  const isAnklingFit = anklingRange === null || (anklingRange >= targetAnkling.min && anklingRange <= targetAnkling.max);
 
   if (isHipFit && isElbowFit && isKneeFit && isAnklingFit) {
     return 'Fit';
-  } else {
-    return 'Not Fit';
   }
+  return 'Not Fit';
 };
