@@ -123,6 +123,8 @@ function App() {
               <Dashboard
                 metrics={currentMetrics}
                 history={recordedData}
+                trainerStatus={trainer.status}
+                trainerData={trainer.currentData}
               />
 
               {recordingState === 'done' && (
