@@ -42,17 +42,6 @@ export const CameraView: React.FC<CameraViewProps> = ({
 
   return (
     <div className="camera-container glass-panel">
-      {error && (
-        <div className="alert alert-error">
-          <AlertTriangle size={16} /> {error}
-        </div>
-      )}
-      {warning && recordingState === 'recording' && (
-        <div className="alert alert-warning">
-          <AlertTriangle size={16} /> {warning}
-        </div>
-      )}
-
       <div className="camera-header">
         <div className="status-indicator">
           {!isModelLoaded ? (
@@ -77,15 +66,27 @@ export const CameraView: React.FC<CameraViewProps> = ({
         )}
       </div>
 
-      {recordingState === 'recording' && (
-        <div className="progress-bar-container">
-          <div className="progress-bar" style={{ width: `${Math.min(100, (elapsedSeconds / 20) * 100)}%` }}></div>
-        </div>
-      )}
+      <div className={`progress-bar-container ${recordingState !== 'recording' ? 'progress-hidden' : ''}`}>
+        <div className="progress-bar" style={{ width: `${Math.min(100, (elapsedSeconds / 20) * 100)}%` }}></div>
+      </div>
 
       <div className="video-wrapper">
         <video ref={videoRef} autoPlay playsInline muted className="webcam-video" />
         <canvas ref={canvasRef} className="pose-canvas" />
+
+        {/* Alerts overlay on the video so they don't shift the layout */}
+        <div className="camera-alerts-overlay">
+          {error && (
+            <div className="alert alert-error">
+              <AlertTriangle size={16} /> {error}
+            </div>
+          )}
+          {warning && recordingState === 'recording' && (
+            <div className="alert alert-warning">
+              <AlertTriangle size={16} /> {warning}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

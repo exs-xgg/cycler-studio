@@ -34,7 +34,7 @@
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  align-items: stretch;
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--bg-color);
@@ -43,6 +43,11 @@ body {
     radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(255, 0, 60, 0.05) 0%, transparent 50%);
   background-attachment: fixed;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
