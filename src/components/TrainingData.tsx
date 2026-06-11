@@ -25,6 +25,7 @@ interface TrainingDataProps {
   onResetSession: () => void;
   onNavigateSettings: () => void;
   onAddWorkoutStep?: (power: number, duration: number) => void;
+  onClearWorkoutPlan?: () => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -43,6 +44,7 @@ export const TrainingData: React.FC<TrainingDataProps> = ({
   workoutStepRemainingTime = 0,
   onStartSession, onStopSession, onResetSession, onNavigateSettings,
   onAddWorkoutStep,
+  onClearWorkoutPlan,
 }) => {
   const [stepPower, setStepPower] = React.useState('');
   const [stepMin, setStepMin] = React.useState('');
@@ -104,6 +106,9 @@ export const TrainingData: React.FC<TrainingDataProps> = ({
             <input type="number" placeholder="Min" value={stepMin} onChange={e => setStepMin(e.target.value)} style={{ width: '60px', padding: '4px' }} />
             <input type="number" placeholder="Sec" value={stepSec} onChange={e => setStepSec(e.target.value)} style={{ width: '60px', padding: '4px' }} />
             <button onClick={handleAddStep} style={{ padding: '4px 8px' }}>Add Step</button>
+            {workoutPlan.length > 0 && onClearWorkoutPlan && (
+              <button onClick={onClearWorkoutPlan} style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#ef4444' }}>Clear Plan</button>
+            )}
           </div>
           {workoutPlan.length > 0 && (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>

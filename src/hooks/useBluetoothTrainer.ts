@@ -1,4 +1,4 @@
-/* eslint-disable no-useless-assignment, react-hooks/refs */
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 // ── Bluetooth UUIDs ──────────────────────────────────────────────────────────
@@ -45,6 +45,11 @@ export interface SessionStats {
   avgSpeed: number;
   totalDistance: number;   // km
   elapsedTime: number;    // seconds
+}
+
+export interface WorkoutStep {
+  power: number;
+  duration: number; // in seconds
 }
 
 const DEFAULT_CONFIG: TrainerConfig = {
@@ -96,6 +101,11 @@ export const useBluetoothTrainer = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [sessionStats, setSessionStats] = useState<SessionStats | null>(null);
 
+  // Workout Plan tracking
+  const [workoutPlan, setWorkoutPlan] = useState<WorkoutStep[]>([]);
+  const [activeWorkoutStepIndex, setActiveWorkoutStepIndex] = useState(-1);
+  const [workoutStepRemainingTime, setWorkoutStepRemainingTime] = useState(0);
+
   // Refs for cleanup
   const deviceRef = useRef<BluetoothDevice | null>(null);
   const serverRef = useRef<BluetoothRemoteGATTServer | null>(null);
@@ -120,6 +130,72 @@ export const useBluetoothTrainer = () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isSessionActive, sessionStartTime]);
+
+  // ── Trainer Control Commands ────────────────────────────────────────────
+  const setTargetPower = useCallback(async (watts: number) => {
+    if (!controlPointRef.current) return;
+    try {
+      const buffer = new ArrayBuffer(3);
+      const view = new DataView(buffer);
+      view.setUint8(0, 0x05); // Set Target Power opcode
+      view.setInt16(1, watts, true);
+      await controlPointRef.current.writeValue(buffer);
+    } catch (err) {
+      console.warn('Failed to set target power:', err);
+    }
+  }, []);
+
+  const setTargetResistance = useCallback(async (level: number) => {
+    if (!controlPointRef.current) return;
+    try {
+      const buffer = new ArrayBuffer(3);
+      const view = new DataView(buffer);
+      view.setUint8(0, 0x04); // Set Target Resistance opcode
+      view.setInt16(1, level * 10, true); // 0.1 resolution
+      await controlPointRef.current.writeValue(buffer);
+    } catch (err) {
+      console.warn('Failed to set resistance:', err);
+    }
+  }, []);
+
+  // Workout Plan step execution
+  useEffect(() => {
+    if (isSessionActive && workoutPlan.length > 0) {
+      let currentStepTime = 0;
+      let currentIndex = 0;
+
+      for (let i = 0; i < workoutPlan.length; i++) {
+        const step = workoutPlan[i];
+        if (elapsedTime >= currentStepTime && elapsedTime < currentStepTime + step.duration) {
+          currentIndex = i;
+          break;
+        }
+        currentStepTime += step.duration;
+
+        // If we've surpassed all steps, complete the workout
+        if (i === workoutPlan.length - 1 && elapsedTime >= currentStepTime) {
+          currentIndex = workoutPlan.length; // Indicates done
+        }
+      }
+
+      if (currentIndex !== activeWorkoutStepIndex) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveWorkoutStepIndex(currentIndex);
+        // Only set target power if we haven't finished the workout plan yet
+        if (currentIndex < workoutPlan.length) {
+          setTargetPower(workoutPlan[currentIndex].power);
+        }
+      }
+
+      if (currentIndex < workoutPlan.length) {
+
+        setWorkoutStepRemainingTime(currentStepTime + workoutPlan[currentIndex].duration - elapsedTime);
+      } else {
+
+        setWorkoutStepRemainingTime(0);
+      }
+    }
+  }, [elapsedTime, isSessionActive, workoutPlan, activeWorkoutStepIndex, setTargetPower]);
 
   // ── FTMS Indoor Bike Data Parser ────────────────────────────────────────
   const parseFTMSData = useCallback((dataView: DataView): Partial<TrainerData> => {
@@ -371,32 +447,7 @@ export const useBluetoothTrainer = () => {
     prevCadenceRef.current = null;
   }, []);
 
-  // ── Trainer Control Commands ────────────────────────────────────────────
-  const setTargetPower = useCallback(async (watts: number) => {
-    if (!controlPointRef.current) return;
-    try {
-      const buffer = new ArrayBuffer(3);
-      const view = new DataView(buffer);
-      view.setUint8(0, 0x05); // Set Target Power opcode
-      view.setInt16(1, watts, true);
-      await controlPointRef.current.writeValue(buffer);
-    } catch (err) {
-      console.warn('Failed to set target power:', err);
-    }
-  }, []);
 
-  const setTargetResistance = useCallback(async (level: number) => {
-    if (!controlPointRef.current) return;
-    try {
-      const buffer = new ArrayBuffer(3);
-      const view = new DataView(buffer);
-      view.setUint8(0, 0x04); // Set Target Resistance opcode
-      view.setInt16(1, level * 10, true); // 0.1 resolution
-      await controlPointRef.current.writeValue(buffer);
-    } catch (err) {
-      console.warn('Failed to set resistance:', err);
-    }
-  }, []);
 
   // ── Session Controls ────────────────────────────────────────────────────
   const startSession = useCallback(() => {
@@ -404,9 +455,11 @@ export const useBluetoothTrainer = () => {
     setDataHistory([]);
     setSessionStats(null);
     setElapsedTime(0);
+    setActiveWorkoutStepIndex(workoutPlan.length > 0 ? 0 : -1);
+    setWorkoutStepRemainingTime(workoutPlan.length > 0 ? workoutPlan[0].duration : 0);
     setSessionStartTime(Date.now());
     setIsSessionActive(true);
-  }, []);
+  }, [workoutPlan]);
 
   const stopSession = useCallback(() => {
     setIsSessionActive(false);
@@ -463,6 +516,17 @@ export const useBluetoothTrainer = () => {
     setElapsedTime(0);
     setSessionStartTime(null);
     setIsSessionActive(false);
+    setActiveWorkoutStepIndex(-1);
+    setWorkoutStepRemainingTime(0);
+  }, []);
+
+  // ── Workout Controls ────────────────────────────────────────────────────
+  const addWorkoutStep = useCallback((power: number, duration: number) => {
+    setWorkoutPlan(prev => [...prev, { power, duration }]);
+  }, []);
+
+  const clearWorkoutPlan = useCallback(() => {
+    setWorkoutPlan([]);
   }, []);
 
   // ── Cleanup on unmount ──────────────────────────────────────────────────
@@ -503,5 +567,12 @@ export const useBluetoothTrainer = () => {
     startSession,
     stopSession,
     resetSession,
+
+    // Workout
+    workoutPlan,
+    activeWorkoutStepIndex,
+    workoutStepRemainingTime,
+    addWorkoutStep,
+    clearWorkoutPlan,
   };
 };
