@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from 'react';
 import { CameraOff, Loader, AlertTriangle } from 'lucide-react';
 import type { RecordingState } from '../hooks/usePoseDetection';

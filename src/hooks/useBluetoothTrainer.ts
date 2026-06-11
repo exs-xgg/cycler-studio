@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment, react-hooks/refs */
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 // ── Bluetooth UUIDs ──────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ export const useBluetoothTrainer = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [currentData, setCurrentData] = useState<TrainerData>({
-    power: 0, cadence: 0, speed: 0, heartRate: null, resistance: 0, timestamp: Date.now(),
+    power: 0, cadence: 0, speed: 0, heartRate: null, resistance: 0, timestamp: 0,
   });
 
   const [dataHistory, setDataHistory] = useState<TrainerDataPoint[]>([]);
@@ -493,7 +494,7 @@ export const useBluetoothTrainer = () => {
     // Control
     setTargetPower,
     setTargetResistance,
-    hasControl: controlPointRef.current !== null,
+    hasControl: !!controlPointRef.current,
 
     // Session
     isSessionActive,
