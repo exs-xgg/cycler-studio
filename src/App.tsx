@@ -151,10 +151,15 @@ function App() {
             isSessionActive={trainer.isSessionActive}
             elapsedTime={trainer.elapsedTime}
             sessionStats={trainer.sessionStats}
+            workoutPlan={trainer.workoutPlan}
+            activeWorkoutStepIndex={trainer.activeWorkoutStepIndex}
+            workoutStepRemainingTime={trainer.workoutStepRemainingTime}
             onStartSession={trainer.startSession}
             onStopSession={trainer.stopSession}
             onResetSession={trainer.resetSession}
             onNavigateSettings={navigateToSettings}
+            onAddWorkoutStep={trainer.addWorkoutStep}
+            onClearWorkoutPlan={trainer.clearWorkoutPlan}
           />
         )}
 
