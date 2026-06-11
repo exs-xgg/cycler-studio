@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment, react-hooks/refs */
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 // ── Bluetooth UUIDs ──────────────────────────────────────────────────────────

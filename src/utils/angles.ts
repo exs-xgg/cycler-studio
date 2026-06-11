@@ -1,3 +1,4 @@
+
 export type Point = {
   x: number;
   y: number;
@@ -35,7 +36,7 @@ export type BikeType = 'Road' | 'Hybrid' | 'Mountain';
 export const getFitLabel = (
   metrics: BikeFitMetrics,
   position: BikePosition = 'Race/Aero',
-  _bikeType: BikeType = 'Road'
+  bikeType: BikeType = 'Road'
 ): 'Fit' | 'Not Fit' => {
   const { elbowAngle, hipAngle, kneeAngle, anklingRange } = metrics;
 
@@ -50,6 +51,7 @@ export const getFitLabel = (
     targetHip = { min: 80, max: 120 };
   }
 
+  void bikeType;
   const isHipFit = hipAngle >= targetHip.min && hipAngle <= targetHip.max;
   const isElbowFit = elbowAngle >= targetElbow.min && elbowAngle <= targetElbow.max;
   const isKneeFit = kneeAngle >= targetKnee.min && kneeAngle <= targetKnee.max;

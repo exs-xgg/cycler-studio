@@ -85,92 +85,94 @@ function App() {
       </nav>
 
       {/* Page Content */}
-      {activePage === 'fit' && (
-        <>
-          <header className="app-header">
-            <h1>Cycler Fit</h1>
-            <p className="subtitle">Real-time Biomechanical Analysis</p>
-          </header>
+      <div className="content-area">
+        {activePage === 'fit' && (
+          <>
+            <header className="app-header">
+              <h1>Cycler Fit</h1>
+              <p className="subtitle">Real-time Biomechanical Analysis</p>
+            </header>
 
-          <main className="main-content">
-            <div className="left-column">
-              <CameraView
-                videoRef={videoRef}
-                canvasRef={canvasRef}
-                isModelLoaded={isModelLoaded}
-                recordingState={recordingState}
-                error={error}
-                warning={warning}
-                elapsedSeconds={elapsedSeconds}
-                totalFrames={totalFrames}
-                detectedFrames={detectedFrames}
-              />
-
-              <Controls
-                position={position}
-                setPosition={setPosition}
-                bikeType={bikeType}
-                setBikeType={setBikeType}
-                recordingState={recordingState}
-                onStart={startTracking}
-                onStop={stopTracking}
-                onReset={reset}
-                isModelLoaded={isModelLoaded}
-              />
-            </div>
-
-            <div className="right-column">
-              <Dashboard
-                metrics={currentMetrics}
-                history={recordedData}
-                trainerStatus={trainer.status}
-                trainerData={trainer.currentData}
-              />
-
-              {recordingState === 'done' && (
-                <Results
-                  recordedData={recordedData}
-                  position={position}
-                  bikeType={bikeType}
+            <main className="main-content">
+              <div className="left-column">
+                <CameraView
+                  videoRef={videoRef}
+                  canvasRef={canvasRef}
+                  isModelLoaded={isModelLoaded}
+                  recordingState={recordingState}
+                  error={error}
+                  warning={warning}
+                  elapsedSeconds={elapsedSeconds}
                   totalFrames={totalFrames}
                   detectedFrames={detectedFrames}
                 />
-              )}
-            </div>
-          </main>
-        </>
-      )}
 
-      {activePage === 'training' && (
-        <TrainingData
-          status={trainer.status}
-          currentData={trainer.currentData}
-          dataHistory={trainer.dataHistory}
-          config={trainer.config}
-          isSessionActive={trainer.isSessionActive}
-          elapsedTime={trainer.elapsedTime}
-          sessionStats={trainer.sessionStats}
-          onStartSession={trainer.startSession}
-          onStopSession={trainer.stopSession}
-          onResetSession={trainer.resetSession}
-          onNavigateSettings={navigateToSettings}
-        />
-      )}
+                <Controls
+                  position={position}
+                  setPosition={setPosition}
+                  bikeType={bikeType}
+                  setBikeType={setBikeType}
+                  recordingState={recordingState}
+                  onStart={startTracking}
+                  onStop={stopTracking}
+                  onReset={reset}
+                  isModelLoaded={isModelLoaded}
+                />
+              </div>
 
-      {activePage === 'settings' && (
-        <TrainerSettings
-          status={trainer.status}
-          deviceName={trainer.deviceName}
-          serviceType={trainer.serviceType}
-          error={trainer.error}
-          config={trainer.config}
-          hasControl={trainer.hasControl}
-          currentData={trainer.currentData}
-          onConnect={trainer.connect}
-          onDisconnect={trainer.disconnect}
-          onConfigChange={trainer.setConfig}
-        />
-      )}
+              <div className="right-column">
+                <Dashboard
+                  metrics={currentMetrics}
+                  history={recordedData}
+                  trainerStatus={trainer.status}
+                  trainerData={trainer.currentData}
+                />
+
+                {recordingState === 'done' && (
+                  <Results
+                    recordedData={recordedData}
+                    position={position}
+                    bikeType={bikeType}
+                    totalFrames={totalFrames}
+                    detectedFrames={detectedFrames}
+                  />
+                )}
+              </div>
+            </main>
+          </>
+        )}
+
+        {activePage === 'training' && (
+          <TrainingData
+            status={trainer.status}
+            currentData={trainer.currentData}
+            dataHistory={trainer.dataHistory}
+            config={trainer.config}
+            isSessionActive={trainer.isSessionActive}
+            elapsedTime={trainer.elapsedTime}
+            sessionStats={trainer.sessionStats}
+            onStartSession={trainer.startSession}
+            onStopSession={trainer.stopSession}
+            onResetSession={trainer.resetSession}
+            onNavigateSettings={navigateToSettings}
+          />
+        )}
+
+        {activePage === 'settings' && (
+          <TrainerSettings
+            status={trainer.status}
+            deviceName={trainer.deviceName}
+            serviceType={trainer.serviceType}
+            error={trainer.error}
+            config={trainer.config}
+            hasControl={trainer.hasControl}
+            currentData={trainer.currentData}
+            onConnect={trainer.connect}
+            onDisconnect={trainer.disconnect}
+            onConfigChange={trainer.setConfig}
+          />
+        )}
+      </div>
     </div>
   );
 }
