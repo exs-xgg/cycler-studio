@@ -634,8 +634,8 @@
 }
 
 .nav-tab.active {
-  background: rgba(0, 240, 255, 0.1);
-  color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: #000;
 }
 
 .nav-tab.active::after {

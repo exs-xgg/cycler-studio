@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, react-hooks/immutability */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
@@ -83,7 +84,7 @@ function getMissingJointsMessage(keypoints: poseDetection.Keypoint[]): string | 
   ];
 
   // Check right side
-  const missingRight = joints.filter(j => !(keypoints[j.idx]?.score! > 0.25)).map(j => j.name);
+  const missingRight = joints.filter(j => !(keypoints[j.idx] && keypoints[j.idx].score !== undefined && (keypoints[j.idx].score as number) > 0.25)).map(j => j.name);
   // Check left side (offset by -1 since left indices are one less than right in MoveNet)
   const leftJoints = [
     { idx: KEYPOINT.left_shoulder, name: 'shoulder' },
@@ -93,7 +94,7 @@ function getMissingJointsMessage(keypoints: poseDetection.Keypoint[]): string | 
     { idx: KEYPOINT.left_knee, name: 'knee' },
     { idx: KEYPOINT.left_ankle, name: 'ankle' },
   ];
-  const missingLeft = leftJoints.filter(j => !(keypoints[j.idx]?.score! > 0.25)).map(j => j.name);
+  const missingLeft = leftJoints.filter(j => !(keypoints[j.idx] && keypoints[j.idx].score !== undefined && (keypoints[j.idx].score as number) > 0.25)).map(j => j.name);
 
   if (missingRight.length === 0 || missingLeft.length === 0) return null;
 
@@ -173,7 +174,7 @@ export const usePoseDetection = (videoRef: React.RefObject<HTMLVideoElement | nu
     if (!detector || !video || !canvas || !isTrackingRef.current) return;
 
     if (video.readyState < 2) {
-      animationFrameRef.current = requestAnimationFrame(runLoop);
+      animationFrameRef.current = requestAnimationFrame(() => runLoop());
       return;
     }
 

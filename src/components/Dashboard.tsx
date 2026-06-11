@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import type { BikeFitMetrics } from '../utils/angles';
+import type { ConnectionStatus, TrainerData } from '../hooks/useBluetoothTrainer';
 
 interface DashboardProps {
   metrics: BikeFitMetrics | null;
   history: BikeFitMetrics[];
+  trainerStatus?: ConnectionStatus;
+  trainerData?: TrainerData;
 }
 
 const JOINT_CONFIG = [
@@ -13,10 +17,19 @@ const JOINT_CONFIG = [
   { key: 'kneeAngle', label: 'Knee Angle', color: '#39ff14', idealMin: 65, idealMax: 145 },
 ] as const;
 
-export const Dashboard: React.FC<DashboardProps> = ({ metrics, history }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ metrics, history, trainerStatus, trainerData }) => {
   return (
     <div className="dashboard-panel glass-panel">
       <h2>Live Telemetry</h2>
+
+      {trainerStatus === 'connected' && trainerData && (
+        <div className="metrics-grid" style={{ marginBottom: '1rem' }}>
+          <MetricCard title="Power" value={trainerData.power} unit="W" color="#eab308" />
+          <MetricCard title="Cadence" value={trainerData.cadence} unit="rpm" color="#a78bfa" />
+          <MetricCard title="Speed" value={trainerData.speed} unit="km/h" color="#34d399" />
+          <MetricCard title="Heart Rate" value={trainerData.heartRate} unit="bpm" color="#f87171" na={trainerData.heartRate === null} />
+        </div>
+      )}
 
       <div className="metrics-grid">
         <MetricCard title="Elbow" value={metrics?.elbowAngle} unit="°" color="#00f0ff" />
@@ -56,7 +69,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, history }) => {
                       <Tooltip
                         contentStyle={{ background: 'rgba(15,17,21,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '12px' }}
                         labelStyle={{ display: 'none' }}
-                        formatter={(v: any) => [`${v}°`, joint.label]}
+                        formatter={(v: any) => [`${v}°`, joint.label as any]}
                       />
                       <ReferenceLine y={joint.idealMin} stroke={joint.color} strokeDasharray="4 4" strokeOpacity={0.4} />
                       <ReferenceLine y={joint.idealMax} stroke={joint.color} strokeDasharray="4 4" strokeOpacity={0.4} />

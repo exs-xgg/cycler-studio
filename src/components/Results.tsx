@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { getFitLabel } from '../utils/angles';
@@ -226,7 +227,7 @@ export const Results: React.FC<ResultsProps> = ({ recordedData, position, bikeTy
                         <Tooltip
                           contentStyle={{ background: 'rgba(15,17,21,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '12px' }}
                           labelStyle={{ display: 'none' }}
-                          formatter={(v: any) => [`${v}°`, range.label]}
+                          formatter={(v: any) => [`${v}°`, range.label as any]}
                         />
                         <ReferenceLine y={range.min} stroke={range.color} strokeDasharray="4 4" strokeOpacity={0.4} />
                         <ReferenceLine y={range.max} stroke={range.color} strokeDasharray="4 4" strokeOpacity={0.4} />

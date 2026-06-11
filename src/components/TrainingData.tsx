@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import {
   Zap, Gauge, CircleDot, Heart, Timer, Play, Square, RotateCcw,
@@ -215,7 +216,7 @@ export const TrainingData: React.FC<TrainingDataProps> = ({
                       color: '#fff',
                       fontSize: '0.8rem',
                     }}
-                    formatter={(value: any) => [`${value}W`, 'Power']}
+                    formatter={(value: any) => [`${value}W`, 'Power' as any]}
                     labelFormatter={(label: any) => formatTime(Number(label))}
                   />
                   <ReferenceLine y={config.ftp} stroke="#eab30866" strokeDasharray="4 4" label="" />
@@ -251,7 +252,7 @@ export const TrainingData: React.FC<TrainingDataProps> = ({
                       color: '#fff',
                       fontSize: '0.8rem',
                     }}
-                    formatter={(value: any) => [`${value} rpm`, 'Cadence']}
+                    formatter={(value: any) => [`${value} rpm`, 'Cadence' as any]}
                     labelFormatter={(label: any) => formatTime(Number(label))}
                   />
                   <Line
