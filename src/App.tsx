@@ -152,6 +152,10 @@ function App() {
           onStopSession={trainer.stopSession}
           onResetSession={trainer.resetSession}
           onNavigateSettings={navigateToSettings}
+          workoutPlan={trainer.workoutPlan}
+          activeWorkoutStepIndex={trainer.activeWorkoutStepIndex}
+          workoutStepRemainingTime={trainer.workoutStepRemainingTime}
+          onAddWorkoutStep={trainer.addWorkoutStep}
         />
       )}
 

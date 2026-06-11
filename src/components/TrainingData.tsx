@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Zap, Gauge, CircleDot, Heart, Timer, Play, Square, RotateCcw,
-  BluetoothOff, Activity, TrendingUp, Route, Clock, Award,
+  BluetoothOff, Activity, TrendingUp, Route, Clock, Award, Download,
   ArrowRight,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine } from 'recharts';
@@ -16,10 +16,14 @@ interface TrainingDataProps {
   isSessionActive: boolean;
   elapsedTime: number;
   sessionStats: SessionStats | null;
+  workoutPlan?: { power: number; duration: number }[];
+  activeWorkoutStepIndex?: number;
+  workoutStepRemainingTime?: number;
   onStartSession: () => void;
   onStopSession: () => void;
   onResetSession: () => void;
   onNavigateSettings: () => void;
+  onAddWorkoutStep?: (power: number, duration: number) => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -33,8 +37,27 @@ const formatTime = (seconds: number): string => {
 export const TrainingData: React.FC<TrainingDataProps> = ({
   status, currentData, dataHistory, config,
   isSessionActive, elapsedTime, sessionStats,
+  workoutPlan = [],
+  activeWorkoutStepIndex = -1,
+  workoutStepRemainingTime = 0,
   onStartSession, onStopSession, onResetSession, onNavigateSettings,
+  onAddWorkoutStep,
 }) => {
+  const [stepPower, setStepPower] = React.useState('');
+  const [stepMin, setStepMin] = React.useState('');
+  const [stepSec, setStepSec] = React.useState('');
+
+  const handleAddStep = () => {
+    const p = parseInt(stepPower) || 0;
+    const m = parseInt(stepMin) || 0;
+    const s = parseInt(stepSec) || 0;
+    if (p > 0 && (m > 0 || s > 0) && onAddWorkoutStep) {
+      onAddWorkoutStep(p, m * 60 + s);
+      setStepPower('');
+      setStepMin('');
+      setStepSec('');
+    }
+  };
   const isConnected = status === 'connected';
   const zone = getPowerZone(currentData.power, config.ftp);
   const ftpPercent = config.ftp > 0 ? Math.round((currentData.power / config.ftp) * 100) : 0;
@@ -69,6 +92,53 @@ export const TrainingData: React.FC<TrainingDataProps> = ({
           <span className="ftp-label">of FTP</span>
         </div>
       </div>
+
+
+      {/* Workout Session Builder */}
+      {!isSessionActive && !sessionStats && onAddWorkoutStep && (
+        <div className="workout-builder glass-panel">
+          <h3>Workout Plan</h3>
+          <div className="add-step-form" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <input type="number" placeholder="Watts" value={stepPower} onChange={e => setStepPower(e.target.value)} style={{ width: '80px', padding: '4px' }} />
+            <input type="number" placeholder="Min" value={stepMin} onChange={e => setStepMin(e.target.value)} style={{ width: '60px', padding: '4px' }} />
+            <input type="number" placeholder="Sec" value={stepSec} onChange={e => setStepSec(e.target.value)} style={{ width: '60px', padding: '4px' }} />
+            <button onClick={handleAddStep} style={{ padding: '4px 8px' }}>Add Step</button>
+          </div>
+          {workoutPlan.length > 0 && (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {workoutPlan.map((step, idx) => (
+                <li key={idx} style={{ padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  {step.power}W for {formatTime(step.duration)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Active Workout Display */}
+      {isSessionActive && workoutPlan.length > 0 && (
+        <div className="active-workout glass-panel">
+          <h3>Current Workout Step</h3>
+          {activeWorkoutStepIndex < workoutPlan.length ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '1.2rem', color: '#00f0ff' }}>
+                  Target: {workoutPlan[activeWorkoutStepIndex].power}W
+                </div>
+                <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>
+                  Step {activeWorkoutStepIndex + 1} of {workoutPlan.length}
+                </div>
+              </div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fbbf24' }}>
+                {formatTime(workoutStepRemainingTime)}
+              </div>
+            </div>
+          ) : (
+            <div>Workout Complete!</div>
+          )}
+        </div>
+      )}
 
       {/* Main Metrics */}
       <div className="training-metrics-grid">
@@ -271,6 +341,17 @@ export const TrainingData: React.FC<TrainingDataProps> = ({
                 <span className="summary-value">{formatTime(sessionStats.elapsedTime)}</span>
                 <span className="summary-label">Duration</span>
               </div>
+            </div>
+
+            {/* Export FIT action */}
+            <div className="summary-item" style={{ gridColumn: '1 / -1', marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+              <button
+                className="action-btn"
+                onClick={() => { import('../utils/fitFile').then(m => m.exportToFit(dataHistory, sessionStats)) }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                <Download size={16} /> Export to FIT
+              </button>
             </div>
           </div>
         </div>
