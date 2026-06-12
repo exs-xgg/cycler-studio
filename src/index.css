@@ -100,3 +100,60 @@ button:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.4);
 }
+
+/* Intro.js Custom Dark Theme Styles */
+.introjs-tooltip {
+  background-color: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--glass-shadow);
+}
+.introjs-tooltiptext {
+  color: var(--text-primary);
+}
+.introjs-arrow.top {
+  border-bottom-color: var(--panel-border);
+}
+.introjs-arrow.bottom {
+  border-top-color: var(--panel-border);
+}
+.introjs-arrow.left {
+  border-right-color: var(--panel-border);
+}
+.introjs-arrow.right {
+  border-left-color: var(--panel-border);
+}
+.introjs-button {
+  text-shadow: none;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+}
+.introjs-button:hover {
+  background-color: #2a2a2a;
+}
+.introjs-skipbutton {
+  color: var(--text-secondary);
+}
+.introjs-prevbutton {
+  color: var(--text-secondary);
+}
+.introjs-nextbutton {
+  color: var(--text-primary);
+}
+.introjs-disabled, .introjs-disabled:hover, .introjs-disabled:focus {
+  color: #555;
+  background-color: #111;
+  border-color: #111;
+  box-shadow: none;
+}
+.introjs-bullets ul li a {
+  background: var(--text-secondary);
+}
+.introjs-bullets ul li a.active {
+  background: var(--accent-primary);
+}

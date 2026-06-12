@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePoseDetection } from './hooks/usePoseDetection';
 import { useBluetoothTrainer } from './hooks/useBluetoothTrainer';
 import { CameraView } from './components/CameraView';
@@ -9,6 +9,8 @@ import { TrainerSettings } from './components/TrainerSettings';
 import { TrainingData } from './components/TrainingData';
 import type { BikePosition, BikeType } from './utils/angles';
 import { Activity, Settings, Bike, Bluetooth, BluetoothConnected } from 'lucide-react';
+import { Steps } from 'intro.js-react';
+import 'intro.js/introjs.css';
 import './App.css';
 
 type Page = 'fit' | 'training' | 'settings';
@@ -30,8 +32,41 @@ function App() {
 
   const navigateToSettings = () => setActivePage('settings');
 
+  const [stepsEnabled, setStepsEnabled] = useState(() => {
+    return !localStorage.getItem('cycler_onboarding_completed');
+  });
+  const steps = [
+    {
+      element: '#main-navigation',
+      intro: 'Welcome to Cycler! Use these tabs to navigate between the app features.',
+    },
+    {
+      element: '#nav-tab-fit',
+      intro: 'The Fit Analysis page uses your webcam to evaluate your bike fit in real time.',
+    },
+    {
+      element: '#nav-tab-training',
+      intro: 'View your live telemetry and power zones on the Training Data tab when connected to a smart trainer.',
+    },
+    {
+      element: '#nav-tab-settings',
+      intro: 'Go to the Settings tab to connect your Bluetooth trainer.',
+    },
+  ];
+
+  useEffect(() => {
+    localStorage.setItem('cycler_onboarding_completed', 'true');
+  }, [stepsEnabled]);
+
   return (
     <div className="app-container">
+      <Steps
+        enabled={stepsEnabled}
+        steps={steps}
+        initialStep={0}
+        onExit={() => setStepsEnabled(false)}
+      />
+
       {/* Navigation Bar */}
       <nav className="app-nav glass-panel" id="main-navigation">
         <div className="nav-brand">
